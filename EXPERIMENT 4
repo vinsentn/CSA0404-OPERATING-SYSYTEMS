@@ -1,0 +1,87 @@
+#include <stdio.h>
+
+struct Process {
+    int pid;
+    int burst_time;
+    int waiting_time;
+    int turnaround_time;
+};
+
+// Function to sort processes by burst time
+void sortByBurstTime(struct Process p[], int n) {
+    struct Process temp;
+    for (int i = 0; i < n-1; i++) {
+        for (int j = 0; j < n - i - 1; j++) {
+            if (p[j].burst_time > p[j+1].burst_time) {
+                temp = p[j];
+                p[j] = p[j+1];
+                p[j+1] = temp;
+            }
+        }
+    }
+}
+
+void calculateTimes(struct Process p[], int n) {
+    p[0].waiting_time = 0;
+    p[0].turnaround_time = p[0].burst_time;
+
+    for (int i = 1; i < n; i++) {
+        p[i].waiting_time = p[i-1].waiting_time + p[i-1].burst_time;
+        p[i].turnaround_time = p[i].waiting_time + p[i].burst_time;
+    }
+}
+
+void displayTable(struct Process p[], int n) {
+    float total_wait = 0, total_turnaround = 0;
+
+    printf("\nPID\tBurst Time\tWaiting Time\tTurnaround Time\n");
+    for (int i = 0; i < n; i++) {
+        total_wait += p[i].waiting_time;
+        total_turnaround += p[i].turnaround_time;
+        printf("P%d\t%d\t\t%d\t\t%d\n", 
+            p[i].pid, p[i].burst_time, p[i].waiting_time, p[i].turnaround_time);
+    }
+
+    printf("\nAverage Waiting Time: %.2f", total_wait / n);
+    printf("\nAverage Turnaround Time: %.2f\n", total_turnaround / n);
+}
+
+int main() {
+    int n;
+    printf("Enter the number of processes: ");
+    scanf("%d", &n);
+
+    struct Process p[n];
+
+    for (int i = 0; i < n; i++) {
+        p[i].pid = i + 1;
+        printf("Enter Burst Time for Process P%d: ", p[i].pid);
+        scanf("%d", &p[i].burst_time);
+    }
+
+    sortByBurstTime(p, n);
+    calculateTimes(p, n);
+    displayTable(p, n);
+
+    return 0;
+}
+OUTPUT
+Enter the number of processes: 5
+Enter Burst Time for Process P1: 2
+Enter Burst Time for Process P2: 3
+Enter Burst Time for Process P3: 6
+Enter Burst Time for Process P4: 1
+Enter Burst Time for Process P5: 9
+
+PID	Burst Time	Waiting Time	Turnaround Time
+P4	1		0		1
+P1	2		1		3
+P2	3		3		6
+P3	6		6		12
+P5	9		12		21
+
+Average Waiting Time: 4.40
+Average Turnaround Time: 8.60
+
+
+=== Code Execution Successful ===
