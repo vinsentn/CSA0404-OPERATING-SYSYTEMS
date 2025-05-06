@@ -1,0 +1,140 @@
+#include <stdio.h>
+#include <limits.h>
+
+#define MAX 100
+
+typedef struct {
+    int pid;
+    int arrival_time;
+    int burst_time;
+    int remaining_time;
+    int priority;
+    int start_time;
+    int completion_time;
+    int turnaround_time;
+    int waiting_time;
+    int is_completed;
+} Process;
+
+int main() {
+    Process p[MAX];
+    int n, time = 0, completed = 0;
+    float avg_turnaround = 0, avg_waiting = 0;
+
+    printf("Enter number of processes: ");
+    scanf("%d", &n);
+
+    for(int i = 0; i < n; i++) {
+        p[i].pid = i + 1;
+        printf("\nEnter arrival time of P%d: ", p[i].pid);
+        scanf("%d", &p[i].arrival_time);
+        printf("Enter burst time of P%d: ", p[i].pid);
+        scanf("%d", &p[i].burst_time);
+        printf("Enter priority of P%d (lower value = higher priority): ", p[i].pid);
+        scanf("%d", &p[i].priority);
+
+        p[i].remaining_time = p[i].burst_time;
+        p[i].is_completed = 0;
+    }
+
+    printf("\nGantt Chart:\n");
+
+    while (completed != n) {
+        int idx = -1;
+        int highest_priority = INT_MAX;
+
+        // Find process with highest priority at this time
+        for (int i = 0; i < n; i++) {
+            if (p[i].arrival_time <= time && p[i].is_completed == 0) {
+                if (p[i].priority < highest_priority) {
+                    highest_priority = p[i].priority;
+                    idx = i;
+                } else if (p[i].priority == highest_priority) {
+                    // Tie breaker: earlier arrival
+                    if (p[i].arrival_time < p[idx].arrival_time) {
+                        idx = i;
+                    }
+                }
+            }
+        }
+
+        if (idx != -1) {
+            if (p[idx].remaining_time == p[idx].burst_time)
+                p[idx].start_time = time;
+
+            printf("| P%d ", p[idx].pid);
+
+            p[idx].remaining_time--;
+            time++;
+
+            if (p[idx].remaining_time == 0) {
+                p[idx].completion_time = time;
+                p[idx].turnaround_time = p[idx].completion_time - p[idx].arrival_time;
+                p[idx].waiting_time = p[idx].turnaround_time - p[idx].burst_time;
+                p[idx].is_completed = 1;
+
+                avg_turnaround += p[idx].turnaround_time;
+                avg_waiting += p[idx].waiting_time;
+                completed++;
+            }
+        } else {
+            // CPU is idle
+            printf("| Idle ");
+            time++;
+        }
+    }
+    printf("|\n");
+
+    printf("\nPID\tArrival\tBurst\tPriority\tWaiting\tTurnaround\n");
+    for (int i = 0; i < n; i++) {
+        printf("P%d\t%d\t%d\t%d\t\t%d\t%d\n",
+            p[i].pid,
+            p[i].arrival_time,
+            p[i].burst_time,
+            p[i].priority,
+            p[i].waiting_time,
+            p[i].turnaround_time);
+    }
+
+    printf("\nAverage Waiting Time: %.2f", avg_waiting / n);
+    printf("\nAverage Turnaround Time: %.2f\n", avg_turnaround / n);
+
+    return 0;
+}
+
+OUTPUT
+
+
+
+Enter number of processes: 4
+
+Enter arrival time of P1: 5
+Enter burst time of P1: 6
+Enter priority of P1 (lower value = higher priority): 8
+
+Enter arrival time of P2: 3
+Enter burst time of P2: 1
+Enter priority of P2 (lower value = higher priority): 2
+
+Enter arrival time of P3: 3
+Enter burst time of P3: 2
+Enter priority of P3 (lower value = higher priority): 3
+
+Enter arrival time of P4: 1
+Enter burst time of P4: 8
+Enter priority of P4 (lower value = higher priority): 9
+
+Gantt Chart:
+| Idle | P4 | P4 | P2 | P3 | P3 | P1 | P1 | P1 | P1 | P1 | P1 | P4 | P4 | P4 | P4 | P4 | P4 |
+
+PID	Arrival	Burst	Priority	Waiting	Turnaround
+P1	5	6	8		1	7
+P2	3	1	2		0	1
+P3	3	2	3		1	3
+P4	1	8	9		9	17
+
+Average Waiting Time: 2.75
+Average Turnaround Time: 7.00
+
+
+=== Code Execution Successful ===
