@@ -1,0 +1,128 @@
+#include <stdio.h>
+
+struct Process {
+    int pid;
+    int bt;     // Burst Time
+    int rt;     // Remaining Time
+    int at;     // Arrival Time
+    int ct;     // Completion Time
+    int tat;    // Turnaround Time
+    int wt;     // Waiting Time
+};
+
+int main() {
+    int n, quantum, time = 0, completed = 0;
+    float total_tat = 0, total_wt = 0;
+
+    printf("Enter number of processes: ");
+    scanf("%d", &n);
+
+    struct Process p[n];
+
+    for (int i = 0; i < n; i++) {
+        p[i].pid = i + 1;
+        printf("Enter arrival time and burst time for process %d: ", p[i].pid);
+        scanf("%d%d", &p[i].at, &p[i].bt);
+        p[i].rt = p[i].bt;
+    }
+
+    printf("Enter time quantum: ");
+    scanf("%d", &quantum);
+
+    int queue[n], front = 0, rear = 0, visited[n];
+    for (int i = 0; i < n; i++) visited[i] = 0;
+
+    // Enqueue first available process
+    for (int i = 0; i < n; i++) {
+        if (p[i].at == 0) {
+            queue[rear++] = i;
+            visited[i] = 1;
+        }
+    }
+
+    while (completed < n) {
+        if (front == rear) {
+            time++; // No ready processes
+            for (int i = 0; i < n; i++) {
+                if (!visited[i] && p[i].at <= time) {
+                    queue[rear++] = i;
+                    visited[i] = 1;
+                }
+            }
+            continue;
+        }
+
+        int idx = queue[front++];
+        if (p[idx].rt > quantum) {
+            p[idx].rt -= quantum;
+            time += quantum;
+        } else {
+            time += p[idx].rt;
+            p[idx].rt = 0;
+            completed++;
+
+            p[idx].ct = time;
+            p[idx].tat = p[idx].ct - p[idx].at;
+            p[idx].wt = p[idx].tat - p[idx].bt;
+
+            total_tat += p[idx].tat;
+            total_wt += p[idx].wt;
+        }
+
+        // Enqueue newly arrived processes
+        for (int i = 0; i < n; i++) {
+            if (!visited[i] && p[i].at <= time) {
+                queue[rear++] = i;
+                visited[i] = 1;
+            }
+        }
+
+        // If process still has remaining time, put it back
+        if (p[idx].rt > 0) {
+            queue[rear++] = idx;
+        }
+    }
+
+    printf("\nPID\tAT\tBT\tCT\tTAT\tWT\n");
+    for (int i = 0; i < n; i++) {
+        printf("%d\t%d\t%d\t%d\t%d\t%d\n", p[i].pid, p[i].at, p[i].bt,
+               p[i].ct, p[i].tat, p[i].wt);
+    }
+
+    printf("\nAverage Turnaround Time = %.2f", total_tat / n);
+    printf("\nAverage Waiting Time = %.2f\n", total_wt / n);
+
+    return 0;
+}
+
+
+
+
+Enter number of processes: 6
+Enter arrival time and burst time for process 1: 5
+6
+Enter arrival time and burst time for process 2: 1
+5
+Enter arrival time and burst time for process 3: 0
+3
+Enter arrival time and burst time for process 4: 7
+6
+Enter arrival time and burst time for process 5: 4
+8
+Enter arrival time and burst time for process 6: 1
+2
+Enter time quantum: 3
+
+PID	AT	BT	CT	TAT	WT
+4	5	3	22	17	14
+2	1	5	16	15	10
+3	0	3	3	3	0
+4	7	6	28	21	15
+5	4	8	30	26	18
+6	1	2	8	7	5
+
+Average Turnaround Time = 14.83
+Average Waiting Time = 10.33
+
+
+=== Code Execution Successful ===
